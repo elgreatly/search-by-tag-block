@@ -1,4 +1,31 @@
-$( "#searchSelectValue" ).select2();
+//$( "#searchSelectValue" ).select2();
+$( "#searchSelectValue" ).select2({
+    placeholder: $('.searchAjaxForm .forminputTags .labelSearch').text(),
+    sortResults: function(results, container, query) {
+        var resultsStartWith = [];
+        var resultsContain = [];
+        if (query.term) {
+            // use the built in javascript sort function
+            for(var i = 0; i < results.length; i++){
+                var startWith = true;
+                for(var j = 0; j < query.term.length; j++){
+                    if(results[i].text[j].toLowerCase() != query.term[j].toLowerCase()){
+                        startWith = false;
+                        break;
+                    }
+                }
+                if(startWith){
+                    resultsStartWith.push(results[i]);
+                }else{
+                    resultsContain.push(results[i]);
+                }
+            }
+            resultsStartWith=resultsStartWith.sort();
+            return resultsStartWith.concat(resultsContain.sort());
+        }
+        return results;
+    }
+});
 $('#searchValue').val($( "#searchSelectValue" ).val());
 $( "#searchSelectValue" ).change(function(){
 	$('#searchValue').val($( "#searchSelectValue" ).val());
@@ -32,19 +59,19 @@ $( "#searchSelectValue" ).change(function(){
         	var image = '';
         	var description = '';
         	for(var i = 0; i< response.result.length; i++){
-        		if(response.page_thumb[i] != null){
-        			var image = '<div class="SearchImage">' +
-	                    '<a href="' + response.product_links[i] + '">'+
-	                    	'<img src="'+ response.page_thumb[i] +'" alt="' + response.result[i].pageName + '">' +
-						'</a>' +
-					'</div>';
-        		}else{
-        			image = '';
-        		}
-        		if(response.result[i].description.length > 100 ){
-					description = '<a href="' + response.product_links[i] + '">'+ response.result[i].description.substring(0, 100) +'...</a>';
+        		if(response.page_thumb[i] != ''){
+                    var image = '<div class="SearchImage blogImage">' +
+                        '<a href="' + response.product_links[i] + '">'+
+                            '<img src="'+ response.page_thumb[i] +'" alt="' + response.pageNames[i] + '">' +
+                        '</a>' +
+                    '</div>';
+                }else{
+                    image = '';
+                }
+        		if(response.pageDescription[i].length > 100 ){
+					description = '<a href="' + response.product_links[i] + '">'+ response.pageDescription[i].substring(0, 100) +'...</a>';
 				}else{
-					description = '<a href="' + response.product_links[i] + '">'+ response.result[i].description.substring(0, 100) +'</a>';
+					description = '<a href="' + response.product_links[i] + '">'+ response.pageDescription[i].substring(0, 100) +'</a>';
 				}
 	        	
 	        	searchList += '<div class="searchSingle">' +

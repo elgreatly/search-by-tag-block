@@ -163,7 +163,7 @@ class Controller extends BlockController
     }
 
     public $reservedParams=array('page=','query[]=','search_paths[]=','submit=','search_paths%5B%5D=' );
-
+    
     public function do_search()
     {
         $q = $_REQUEST['query'];
@@ -248,8 +248,8 @@ class Controller extends BlockController
         $this->set('searchList', $ipl);
         $this->set('pagination', $pagination);
     }
-	
-	function action_search_by_tag(){
+    
+    function action_search_by_tag(){
 		$q = $_GET['query'];
         // i have NO idea why we added this in rev 2000. I think I was being stupid. - andrew
         // $_q = trim(preg_replace('/[^A-Za-z0-9\s\']/i', ' ', $_REQUEST['query']));
@@ -266,6 +266,14 @@ class Controller extends BlockController
 			$db = Loader::db();
 			$criteria = array();
 			$searchQuery = explode(',', $_GET['query']);
+            if ( is_array($_REQUEST['search_paths']) ) {
+                foreach ($_REQUEST['search_paths'] as $path) {
+                    if(!strlen($path)) continue;
+                    $ipl->filterByPath($path);
+                }
+            } elseif ($this->baseSearchPath != '') {
+                $ipl->filterByPath($this->baseSearchPath);
+            }
 			if(is_array($searchQuery)){
 				foreach ($searchQuery as $v) {
 					$escapedValue = $v;
@@ -283,17 +291,23 @@ class Controller extends BlockController
         $results = $pagination->getCurrentPageResults();
 		$resultImage = array();
 		$linkProduct = array();
-        $resultJS = array();
 		$ih = Loader::helper('image');
-		foreach ($results as $key => $r) {
-            $resultJS[$key]["description"] = $r->getCollectionDescription();
-            $resultJS[$key]["pageName"] = $r->getCollectionName();
+        $counter = 0;
+        $pageName = [];
+        $pageDescription = [];
+        $counter = 0;
+		foreach ($results as $r) {
 			$linkProduct[] = $r->getCollectionLink();
 		   	$oPage = Page::getById($r->getCollectionID());
        		$oThumb = $oPage->getAttribute('thumbnail');
 			if(isset($oThumb) && $oThumb != false){
-				$resultImage[] = $ih->getThumbnail($oThumb, 270, 200, true)->src;
-			}
+				$resultImage[] = $ih->getThumbnail($oThumb, 70, 95, false)->src;
+			}else{
+                $resultImage[] = '';
+            }
+            $pageName[] = $r->getCollectionName();
+            $pageDescription[] = $r->getCollectionDescription();
+            $counter++;
 		}
 		$paginationView;
         if ($pagination->getTotalPages() > 1 && $pagination->haveToPaginate()) {
@@ -307,7 +321,7 @@ class Controller extends BlockController
 			$totalPageNumber = 0;
 		} 
         //print_r($results);
-		$ajaxSearchResult = array('result' => $resultJS, 'page_thumb' => $resultImage, 'pagination' => $paginationView, 'product_links' => $linkProduct, 'total_number' => $totalPageNumber);
+		$ajaxSearchResult = array('result' => $results, 'pageNames' => $pageName, 'pageDescription' => $pageDescription, 'page_thumb' => $resultImage, 'pagination' => $paginationView, 'product_links' => $linkProduct, 'total_number' => $totalPageNumber);
 		if(isset($_GET['query']) && !empty($_GET['query'])) {
 			echo json_encode($ajaxSearchResult);
 		}else{

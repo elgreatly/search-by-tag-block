@@ -58,9 +58,6 @@ if (!isset($query) || !is_string($query)) {
         } else {
             $tt = Core::make('helper/text');
             ?>
-            	<div class="searchTitle">
-					<h4>erweiterte suche</h4>
-				</div>
 				<div class="searchSeparator"></div>
 				<div class="searchList">
             	<?php
